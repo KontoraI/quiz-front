@@ -1,27 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { GradientText, GrButton, Layout } from "../../components";
 import { observer } from "mobx-react-lite";
 import { Image, StyleSheet, View } from "react-native";
-import { authService } from "../../shared/store/store";
+import { authService } from "../../shared/store/authStore";
 import LinearGradient from "react-native-linear-gradient";
 import Loader from "../LoadScreen/Loader";
 import RenderHtml from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
+import { quizService } from "../../shared/store/quizStore";
 
 const QuizScreen: React.FC = observer(({ navigation }) => {
-  const { isLoading, startTest, quizRequest } = authService;
-  const [index, setIndex] = useState(1);
+  const { isLoading, logout } = authService;
+  const { startTest, quizRequest, testRequest } = quizService;
+
+  const { width } = useWindowDimensions();
+
+  useEffect(() => {
+    const load = async () => {
+      await testRequest();
+    };
+
+    load();
+  }, []);
 
   const description = {
     html: startTest.description,
   };
 
-  const { width } = useWindowDimensions();
-
   const tagsStyles = {
     body: {
-      fontSize: "18",
-      fontWeight: "400",
+      fontSize: 18,
     },
   };
 
@@ -43,31 +51,37 @@ const QuizScreen: React.FC = observer(({ navigation }) => {
               colors={["#9192FC", "#5C5CDE"]}
             >
               {startTest.test_finished
-                ? startTest.day_title
-                : `Поздравляем,\nВы прошли ${startTest.day_number}/10 дней`}
+                ? `Поздравляем,\nВы прошли ${startTest.day_number}/10 дней`
+                : startTest.day_title}
             </GradientText>
-            {startTest.test_finished && (
+            {!startTest.test_finished && (
               <RenderHtml
                 source={description}
                 contentWidth={width}
-                tagsStyles={tagsStyles.body}
+                tagsStyles={tagsStyles}
               />
             )}
             <GrButton
               label={
                 startTest.test_finished ? "Смотреть результаты" : "Начать тест"
               }
-              onPress={() =>
-                startTest.test_finished
-                  ? navigation.navigate("Results")
-                  : quizRequest(index).finally(() =>
-                      navigation.navigate("Questions")
-                    )
+              onPress={async () =>
+                !startTest.test_finished
+                  ? await quizRequest(1).finally(() => {
+                      navigation.navigate("Questions");
+                    })
+                  : navigation.navigate("Results")
               }
-              desabled={false}
+              disabled={false}
               colors={["#9192FC", "#5C5CDE"]}
             />
           </LinearGradient>
+          <GrButton
+            label={"Выход"}
+            onPress={() => logout()}
+            disabled={false}
+            colors={["white", "blue", "red"]}
+          />
         </View>
       )}
     </Layout>

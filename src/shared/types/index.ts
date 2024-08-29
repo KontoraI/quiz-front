@@ -18,5 +18,10 @@ export interface IQuestionsResponse {
   question_id: number;
   question_number: number;
   question_title: string;
-  question_count: number;
+  questions_count: number;
+  selected_answer: number | boolean;
+}
+
+export interface IResultResponse {
+  content: string;
 }

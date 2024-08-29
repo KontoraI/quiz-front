@@ -8,19 +8,18 @@ interface ButtonProps {
   code?: string;
   email?: string;
   label: string;
-  setEmail?: (e: string) => void;
   onPress: () => void;
-  desabled: boolean;
+  disabled: boolean;
   colors: string[];
   location?: number[];
   style?: ViewStyle;
 }
 
 const GrButton: React.FC<ButtonProps> = observer(
-  ({ label, onPress, desabled, colors, location, style }) => {
+  ({ label, onPress, disabled, colors, location, style }) => {
     return (
       <TouchableOpacity
-        disabled={desabled}
+        disabled={disabled}
         style={[{ width: "100%" }, style]}
         onPress={onPress}
       >

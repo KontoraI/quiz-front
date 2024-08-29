@@ -9,13 +9,11 @@ import LinearGradient from "react-native-linear-gradient";
 import { GradientText, GrButton, Input, Layout } from "../../components";
 import { emailRegex } from "../../shared/constants";
 import { observer } from "mobx-react-lite";
-import { authService } from "../../shared/store/store";
-import { useStorage } from "../../shared/hooks";
+import { authService } from "../../shared/store/authStore";
 
 const MailScreen: React.FC = observer(({ navigation }) => {
   const [email, setEmail] = useState("");
   const { passwordRequest } = authService;
-  const { setValue } = useStorage("email", "");
 
   return (
     <Layout>
@@ -48,13 +46,11 @@ const MailScreen: React.FC = observer(({ navigation }) => {
                   ? ["#9192FC", "#5C5CDE"]
                   : ["rgba(145, 146, 252, 0.25)", "rgba(92, 92, 222, 0.25)"]
               }
-              desabled={!emailRegex.test(email!)}
+              disabled={!emailRegex.test(email!)}
               label="Продолжить"
               email={email}
-              setEmail={() => setEmail(email)}
-              onPress={() => {
-                passwordRequest(email).then(() => {
-                  setValue(email);
+              onPress={async () => {
+                await passwordRequest(email).finally(() => {
                   navigation.navigate("CodeScreen");
                 });
               }}

@@ -6,10 +6,10 @@ import { createStackNavigator } from "@react-navigation/stack";
 const Stack = createStackNavigator();
 
 const PrivateNavigation: React.FC = observer(() => {
-  
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="QuizScreen" component={QuizScreen} />
+      <Stack.Screen name="QiuzScreen" component={QuizScreen} />
       <Stack.Screen name="Questions" component={Questions} />
       <Stack.Screen name="Results" component={Results} />
     </Stack.Navigator>

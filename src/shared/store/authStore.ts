@@ -3,25 +3,14 @@ import AuthService from "../api/AuthService";
 import { MMKV } from "react-native-mmkv";
 import QuizService from "../api/QuizService";
 import { IQuestionsResponse, IQuizResponse } from "../types";
+import { DevSettings } from "react-native";
+import RNRestart from "react-native-restart";
 
 class Auth {
   isAuth: boolean = false;
   user = {};
   emailStore: string = "";
   isLoading: boolean = false;
-  startTest: IQuizResponse = {
-    test_finished: false,
-    day_number: 0,
-    day_title: "",
-    description: "",
-  };
-  dayTest: IQuestionsResponse = {
-    answers: [],
-    question_id: 0,
-    question_number: 0,
-    question_title: "",
-    question_count: 0,
-  };
 
   constructor() {
     makeAutoObservable(this);
@@ -33,15 +22,6 @@ class Auth {
     const storage = new MMKV();
     if (storage.contains("token")) {
       this.isAuth = true;
-    }
-  }
-
-  checkTest() {
-    const storage = new MMKV();
-    if (storage.getBoolean("testFinished")) {
-      this.startTest.test_finished = true;
-    } else {
-      this.startTest.test_finished = false;
     }
   }
 
@@ -65,6 +45,13 @@ class Auth {
       storage.set("token", JSON.stringify(response.data.token));
       storage.set("refreshToken", JSON.stringify(response.data.refresh_token));
       this.checkAuth();
+      this.setIsLoading(false);
+
+      if (__DEV__) {
+        DevSettings.reload();
+      } else {
+        RNRestart.Restart();
+      }
     } catch (error) {
       console.log(error);
     }
@@ -77,31 +64,7 @@ class Auth {
   passwordRequest = async (email: string) => {
     try {
       const response = await AuthService.passwordRequest(email);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  testRequest = async () => {
-    try {
-      const response = await QuizService.checkTest();
-      console.log(response);
-      this.setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  quizRequest = async (index: number) => {
-    try {
-      const { data } = await QuizService.quizList(index);
-      this.dayTest = {
-        answers: data.answers,
-        question_count: data.question_count,
-        question_id: data.question_id,
-        question_number: data.question_number,
-        question_title: data.question_title,
-      };
+      this.setEmail(email);
     } catch (error) {
       console.log(error);
     }
@@ -111,21 +74,7 @@ class Auth {
     const storage = new MMKV();
     storage.clearAll();
     this.isAuth = false;
-    this.dayTest = {
-      answers: [],
-      question_id: 0,
-      question_number: 0,
-      question_title: "",
-      question_count: 0,
-    };
     this.emailStore = "";
-    this.isLoading = false;
-    this.startTest = {
-      test_finished: false,
-      day_number: 0,
-      day_title: "",
-      description: "",
-    };
   };
 }
 

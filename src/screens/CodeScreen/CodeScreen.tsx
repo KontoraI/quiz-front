@@ -10,13 +10,14 @@ import LinearGradient from "react-native-linear-gradient";
 import { GradientText, Input, Layout, Timer } from "../../components";
 import { codeRegex } from "../../shared/constants";
 import { observer } from "mobx-react-lite";
-import { authService } from "../../shared/store/store";
+import { authService } from "../../shared/store/authStore";
 import GrButton from "../../components/Button/GrButton";
+import { quizService } from "../../shared/store/quizStore";
 
 const CodeScreen: React.FC = observer(() => {
   const [timer, setTimer] = useState(false);
   const [code, setCode] = useState("");
-  const { login, emailStore, testRequest } = authService;
+  const { login, emailStore } = authService;
 
   return (
     <Layout>
@@ -87,13 +88,11 @@ const CodeScreen: React.FC = observer(() => {
                   ? ["#9192FC", "#5C5CDE"]
                   : ["rgba(145, 146, 252, 0.25)", "rgba(92, 92, 222, 0.25)"]
               }
-              desabled={!codeRegex.test(code!)}
+              disabled={!codeRegex.test(code!)}
               label="Войти"
               code={code}
-              onPress={() => {
-                login(emailStore).then(() => {
-                  testRequest();
-                });
+              onPress={async () => {
+                await login(emailStore);
               }}
             />
           </View>

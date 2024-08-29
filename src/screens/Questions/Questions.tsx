@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   SectionList,
@@ -9,11 +9,13 @@ import {
   View,
 } from "react-native";
 import { GradientText, GrButton, Layout } from "../../components";
-import { authService } from "../../shared/store/store";
+import { authService } from "../../shared/store/authStore";
 import LinearGradient from "react-native-linear-gradient";
+import { quizService } from "../../shared/store/quizStore";
 
 const Questions = observer(({ navigation }) => {
-  const { logout, dayTest } = authService;
+  const { dayTest, quizRequest, setAnswer, getResults, loading, setLoading } =
+    quizService;
   const [isSelected, setIsSelected] = useState<{
     state: boolean;
     selectedIndex: number;
@@ -22,24 +24,29 @@ const Questions = observer(({ navigation }) => {
     selectedIndex: 0,
   });
 
-  //   const DATA = [
-  //     {
-  //       title: dayTest.question_title,
-  //       data: dayTest.answers.map((e) => e.answer_title),
-  //     },
-  //   ];
+  useEffect(() => {
+    if (dayTest.selected_answer) {
+      setIsSelected({
+        state: true,
+        selectedIndex: dayTest.selected_answer - 1,
+      });
+    }
+  }, [dayTest.question_id]);
 
   const DATA = [
     {
-      title: "Main dishes",
-      data: ["Pizza", "Burger", "Risotto", "sigma", "sigma", "sigma", "sigma"],
+      title: dayTest.question_title,
+      data: dayTest.answers.map((e) => e.answer_title),
     },
   ];
 
   return (
     <Layout>
       <View style={styles.mainConteiner}>
-        <Image source={require("../../../assets/img/banner.png")} />
+        <Image
+          style={{ opacity: isSelected.state || loading ? 0.7 : 1 }}
+          source={require("../../../assets/img/banner.png")}
+        />
         <SectionList
           sections={DATA}
           keyExtractor={(item, index) => item + index}
@@ -51,7 +58,18 @@ const Questions = observer(({ navigation }) => {
               }
             >
               <LinearGradient
-                style={isSelected ? styles.border : ""}
+                style={[
+                  isSelected.state ? styles.border : "",
+                  {
+                    opacity:
+                      (isSelected.state &&
+                        isSelected.selectedIndex !== index) ||
+                      loading
+                        ? 0.7
+                        : 1,
+                  },
+                  ,
+                ]}
                 colors={
                   isSelected.state && index === isSelected.selectedIndex
                     ? ["#9192FC", "#5C5CDE"]
@@ -60,20 +78,41 @@ const Questions = observer(({ navigation }) => {
               >
                 <View style={styles.sectionItem}>
                   <Image source={require("../../../assets/img/quiz.png")} />
-                  <Text style={styles.answerText}>{item}</Text>
+                  <Text
+                    style={[
+                      styles.answerText,
+                      {
+                        opacity:
+                          (isSelected.state &&
+                            isSelected.selectedIndex !== index) ||
+                          loading
+                            ? 0.7
+                            : 1,
+                      },
+                    ]}
+                  >
+                    {item}
+                  </Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
           )}
           renderSectionHeader={({ section: { title } }) => (
-            <View style={styles.textContainer}>
+            <View
+              style={[
+                styles.textContainer,
+                {
+                  opacity: isSelected.state || loading ? 0.7 : 1,
+                },
+              ]}
+            >
               <GradientText
                 colors={["#9192FC", "#5C5CDE"]}
                 start={{ x: 1, y: 1 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.textStart}
               >
-                Вопрос {dayTest.question_id} из 10
+                Вопрос {dayTest.question_id} из {dayTest.questions_count}
               </GradientText>
               <Text style={styles.testEnd}>{title}</Text>
             </View>
@@ -82,8 +121,12 @@ const Questions = observer(({ navigation }) => {
         <View style={styles.buttonContainer}>
           <GrButton
             label="Назад"
-            onPress={() => console.log("sigma")}
-            desabled={dayTest.question_id === 1}
+            onPress={() => {
+              setLoading(true);
+              quizRequest(dayTest.question_id - 1);
+              setIsSelected({ state: false, selectedIndex: 0 });
+            }}
+            disabled={dayTest.question_id === 1 || loading}
             colors={
               dayTest.question_id === 1
                 ? ["rgba(252, 145, 145, 0.2)", "rgba(222, 92, 108, 0.2)"]
@@ -92,18 +135,27 @@ const Questions = observer(({ navigation }) => {
           />
           <GrButton
             label={
-              dayTest.question_id === dayTest.question_count
+              dayTest.question_id === dayTest.questions_count
                 ? "Завершить тест"
                 : "Далее"
             }
-            onPress={() => {
-              isSelected
-                ? console.log("sigma")
-                : navigation.navigate("Results");
+            onPress={async () => {
+              if (isSelected.state) {
+                await setAnswer(
+                  dayTest.question_id,
+                  isSelected.selectedIndex + 1
+                );
+                if (dayTest.question_id === dayTest.questions_count) {
+                  await getResults().finally(navigation.navigate("Results"));
+                } else {
+                  await quizRequest(dayTest.question_id + 1);
+                }
+                setIsSelected({ state: false, selectedIndex: 0 });
+              }
             }}
-            desabled={!isSelected.state}
+            disabled={!isSelected.state || loading}
             colors={
-              isSelected
+              isSelected.state
                 ? ["rgba(145, 146, 252, 1)", 'rgba(92, 92, 222, 1)"']
                 : ["rgba(145, 146, 252, 0.4)", "rgba(92, 92, 222, 0.4)"]
             }
