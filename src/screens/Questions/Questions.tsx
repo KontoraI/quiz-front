@@ -8,12 +8,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { GradientText, GrButton, Layout } from "../../components";
-import { authService } from "../../shared/store/authStore";
+import { Header } from "../../components";
 import LinearGradient from "react-native-linear-gradient";
 import { quizService } from "../../shared/store/quizStore";
+import { useTypedNavigation } from "../../shared/hooks";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { GradientButton, GradientText, Layout } from "../../shared/ui";
 
-const Questions = observer(({ navigation }) => {
+const Questions = observer(() => {
   const { dayTest, quizRequest, setAnswer, getResults, loading, setLoading } =
     quizService;
   const [isSelected, setIsSelected] = useState<{
@@ -23,6 +29,30 @@ const Questions = observer(({ navigation }) => {
     state: false,
     selectedIndex: 0,
   });
+  const [hasSelect, setHasSelect] = useState(false);
+
+  const opacity = useSharedValue(1);
+
+  const handleAnswerSelect = (index: number) => {
+    if (index === isSelected.selectedIndex && isSelected.state) {
+      clearOpacity();
+      setIsSelected({ state: false, selectedIndex: 0 });
+    } else {
+      clearOpacity();
+      setIsSelected({ state: true, selectedIndex: index });
+      opacity.value = withTiming(0.6, { duration: 300 });
+    }
+  };
+
+  const clearOpacity = () => {
+    opacity.value = withTiming(1, { duration: 300 });
+  };
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  });
 
   useEffect(() => {
     if (dayTest.selected_answer) {
@@ -30,8 +60,11 @@ const Questions = observer(({ navigation }) => {
         state: true,
         selectedIndex: dayTest.selected_answer - 1,
       });
+      handleAnswerSelect(dayTest.selected_answer - 1);
     }
   }, [dayTest.question_id]);
+
+  const navigation = useTypedNavigation();
 
   const DATA = [
     {
@@ -43,88 +76,93 @@ const Questions = observer(({ navigation }) => {
   return (
     <Layout>
       <View style={styles.mainConteiner}>
-        <Image
-          style={{ opacity: isSelected.state || loading ? 0.7 : 1 }}
-          source={require("../../../assets/img/banner.png")}
-        />
+        <Header loading={loading} isSelected={isSelected} />
         <SectionList
           sections={DATA}
           keyExtractor={(item, index) => item + index}
           renderItem={({ item, index }) => (
-            <TouchableOpacity
-              style={styles.sectionList}
-              onPress={() =>
-                setIsSelected({ state: true, selectedIndex: index })
-              }
-            >
-              <LinearGradient
-                style={[
-                  isSelected.state ? styles.border : "",
-                  {
-                    opacity:
-                      (isSelected.state &&
-                        isSelected.selectedIndex !== index) ||
-                      loading
-                        ? 0.7
-                        : 1,
-                  },
-                  ,
-                ]}
-                colors={
-                  isSelected.state && index === isSelected.selectedIndex
-                    ? ["#9192FC", "#5C5CDE"]
-                    : ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]
-                }
-              >
-                <View style={styles.sectionItem}>
-                  <Image source={require("../../../assets/img/quiz.png")} />
-                  <Text
-                    style={[
-                      styles.answerText,
-                      {
-                        opacity:
-                          (isSelected.state &&
-                            isSelected.selectedIndex !== index) ||
-                          loading
-                            ? 0.7
-                            : 1,
-                      },
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          renderSectionHeader={({ section: { title } }) => (
-            <View
+            <Animated.View
               style={[
-                styles.textContainer,
-                {
-                  opacity: isSelected.state || loading ? 0.7 : 1,
-                },
+                isSelected.state && index !== isSelected.selectedIndex
+                  ? animatedStyle
+                  : {
+                      opacity: 1,
+                    },
               ]}
             >
-              <GradientText
-                colors={["#9192FC", "#5C5CDE"]}
-                start={{ x: 1, y: 1 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.textStart}
+              <TouchableOpacity
+                style={styles.sectionList}
+                onPressIn={() => {
+                  clearOpacity();
+                  handleAnswerSelect(index);
+                  setHasSelect(false);
+                }}
               >
-                Вопрос {dayTest.question_id} из {dayTest.questions_count}
-              </GradientText>
-              <Text style={styles.testEnd}>{title}</Text>
+                <LinearGradient
+                  colors={
+                    isSelected.state && index === isSelected.selectedIndex
+                      ? ["#9192FC", "#5C5CDE"]
+                      : ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]
+                  }
+                  style={styles.border}
+                >
+                  <View style={styles.sectionItem}>
+                    <Image source={require("../../../assets/img/quiz.png")} />
+                    <Text style={[styles.answerText]}>{item}</Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={{ minWidth: "100%" }}>
+              <Animated.View style={[styles.banner, animatedStyle]}>
+                <Image
+                  resizeMode="cover"
+                  style={{
+                    flex: 1,
+                    height: undefined,
+                    width: undefined,
+                    maxWidth: 82,
+                    maxHeight: 90,
+                  }}
+                  source={require("../../../assets/img/bannerIcon.png")}
+                />
+                <Image
+                  resizeMode="cover"
+                  style={{
+                    flex: 1,
+                    height: undefined,
+                    width: undefined,
+                    maxHeight: 90,
+                    borderRadius: 8,
+                  }}
+                  source={require("../../../assets/img/newBanner.png")}
+                />
+              </Animated.View>
+              <Animated.View style={[styles.textContainer, animatedStyle]}>
+                <GradientText
+                  colors={["#9192FC", "#5C5CDE"]}
+                  start={{ x: 1, y: 1 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.textStart}
+                >
+                  Вопрос {dayTest.question_id} из {dayTest.questions_count}
+                </GradientText>
+                <Text style={styles.testEnd}>{title}</Text>
+              </Animated.View>
             </View>
           )}
         />
         <View style={styles.buttonContainer}>
-          <GrButton
+          <GradientButton
             label="Назад"
             onPress={() => {
               setLoading(true);
               quizRequest(dayTest.question_id - 1);
               setIsSelected({ state: false, selectedIndex: 0 });
+              clearOpacity();
+              setHasSelect(false);
             }}
             disabled={dayTest.question_id === 1 || loading}
             colors={
@@ -133,33 +171,48 @@ const Questions = observer(({ navigation }) => {
                 : ["rgba(252, 145, 145, 1)", "rgba(222, 92, 108, 1)"]
             }
           />
-          <GrButton
-            label={
-              dayTest.question_id === dayTest.questions_count
-                ? "Завершить тест"
-                : "Далее"
-            }
-            onPress={async () => {
-              if (isSelected.state) {
-                await setAnswer(
-                  dayTest.question_id,
-                  isSelected.selectedIndex + 1
-                );
-                if (dayTest.question_id === dayTest.questions_count) {
-                  await getResults().finally(navigation.navigate("Results"));
-                } else {
-                  await quizRequest(dayTest.question_id + 1);
-                }
-                setIsSelected({ state: false, selectedIndex: 0 });
+          <LinearGradient
+            style={{ padding: 2, borderRadius: 30 }}
+            colors={hasSelect ? ["#FC9191", "#DE5C6C"] : ["#fff", "#fff"]}
+          >
+            <GradientButton
+              label={
+                dayTest.question_id === dayTest.questions_count
+                  ? "Завершить тест"
+                  : hasSelect
+                  ? "Выберите вариант ответа"
+                  : "Далее"
               }
-            }}
-            disabled={!isSelected.state || loading}
-            colors={
-              isSelected.state
-                ? ["rgba(145, 146, 252, 1)", 'rgba(92, 92, 222, 1)"']
-                : ["rgba(145, 146, 252, 0.4)", "rgba(92, 92, 222, 0.4)"]
-            }
-          />
+              labelColor={hasSelect ? ["#FC9191", "#DE5C6C"] : ["#fff", "#fff"]}
+              onPress={async () => {
+                setLoading(true);
+                if (isSelected.state) {
+                  await setAnswer(
+                    dayTest.question_id,
+                    isSelected.selectedIndex + 1
+                  );
+                  if (dayTest.question_id === dayTest.questions_count) {
+                    await getResults().finally(() =>
+                      navigation.navigate("Results")
+                    );
+                  } else {
+                    await quizRequest(dayTest.question_id + 1);
+                  }
+                  setIsSelected({ state: false, selectedIndex: 0 });
+                  clearOpacity();
+                } else {
+                  setHasSelect(true);
+                  clearOpacity();
+                }
+              }}
+              colors={
+                hasSelect
+                  ? ["#FBFCFF", "#F8FBFF"]
+                  : ["rgba(145, 146, 252, 1)", 'rgba(92, 92, 222, 1)"']
+              }
+              disabled={false}
+            />
+          </LinearGradient>
         </View>
       </View>
     </Layout>
@@ -172,10 +225,11 @@ const styles = StyleSheet.create({
   mainConteiner: {
     flex: 1,
     alignItems: "center",
+    width: "100%",
   },
   sectionList: {
     padding: 10,
-    width: 380,
+    width: "100%",
   },
   sectionItem: {
     display: "flex",
@@ -192,7 +246,8 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "rgba(248, 252, 255, 1)",
     borderRadius: 10,
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingTop: 10,
     gap: 10,
   },
   textContainer: {
@@ -216,5 +271,16 @@ const styles = StyleSheet.create({
   answerText: {
     fontWeight: "600",
     fontSize: 18,
+  },
+  banner: {
+    display: "flex",
+    alignSelf: "center",
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+    flex: 1,
+    justifyContent: "center",
+    height: 90,
+    marginBottom: 10,
   },
 });

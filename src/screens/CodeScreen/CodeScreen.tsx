@@ -7,17 +7,16 @@ import {
   Keyboard,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { GradientText, Input, Layout, Timer } from "../../components";
 import { codeRegex } from "../../shared/constants";
 import { observer } from "mobx-react-lite";
 import { authService } from "../../shared/store/authStore";
-import GrButton from "../../components/Button/GrButton";
-import { quizService } from "../../shared/store/quizStore";
+import { GradientButton, GradientText, Layout } from "../../shared/ui";
+import { Input, Timer } from "../../components";
 
 const CodeScreen: React.FC = observer(() => {
   const [timer, setTimer] = useState(false);
   const [code, setCode] = useState("");
-  const { login, emailStore } = authService;
+  const { login, emailStore, correctCode } = authService;
 
   return (
     <Layout>
@@ -44,7 +43,7 @@ const CodeScreen: React.FC = observer(() => {
             >
               <Input label={"Код из почты"} code={code} setCode={setCode} />
             </LinearGradient>
-            {code && !codeRegex.test(code) && (
+            {correctCode && (
               <View style={styles.wrongCodeContainer}>
                 <GradientText
                   style={styles.wrongCodeText}
@@ -82,7 +81,7 @@ const CodeScreen: React.FC = observer(() => {
                 />
               )}
             </TouchableOpacity>
-            <GrButton
+            <GradientButton
               colors={
                 codeRegex.test(code)
                   ? ["#9192FC", "#5C5CDE"]
@@ -92,7 +91,7 @@ const CodeScreen: React.FC = observer(() => {
               label="Войти"
               code={code}
               onPress={async () => {
-                await login(emailStore);
+                await login(emailStore, code);
               }}
             />
           </View>
@@ -122,8 +121,11 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   gradientBorder: {
+    position: "relative",
     borderRadius: 15,
     padding: 2,
+    height: 74,
+    width: "100%",
   },
   inputContainer: {
     backgroundColor: "#F8FBFF",
@@ -132,7 +134,6 @@ const styles = StyleSheet.create({
   styleInput: {
     paddingVertical: 14,
     paddingHorizontal: 25,
-    width: 350,
     height: 70,
     fontWeight: "400",
     fontSize: 18,
@@ -144,7 +145,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   containerText: {
-    width: 350,
     fontWeight: "600",
     textAlign: "center",
     fontSize: 27,
@@ -157,7 +157,6 @@ const styles = StyleSheet.create({
   },
   codeContainer: {
     display: "flex",
-    width: 287,
     flexDirection: "row",
     paddingHorizontal: 20,
     alignSelf: "flex-start",
@@ -166,7 +165,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   wrongCodeContainer: {
-    width: 167,
     alignSelf: "flex-start",
     paddingHorizontal: 20,
   },

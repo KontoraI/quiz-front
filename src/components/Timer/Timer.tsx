@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import GradientText from "../GradientText/GradientText";
+import GradientText from "../../shared/ui/GradientText/GradientText";
 
 interface TimerProps {
   onTimerEnd: () => void;

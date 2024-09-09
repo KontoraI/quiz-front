@@ -9,6 +9,7 @@ import { MMKV } from "react-native-mmkv";
 import { IRefreshResponse } from "../types";
 import RNRestart from "react-native-restart";
 
+
 const storage = new MMKV();
 
 const getToken = () => {
@@ -41,8 +42,6 @@ $api.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & {
       _isRetry?: boolean;
     };
-
-    console.log(error.response);
 
     if (error.response?.status === 401 && !originalRequest._isRetry) {
       originalRequest._isRetry = true;

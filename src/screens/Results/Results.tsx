@@ -1,5 +1,5 @@
 import React from "react";
-import { GradientText, GrButton, Layout } from "../../components";
+
 import {
   Image,
   StyleSheet,
@@ -11,9 +11,13 @@ import { ScrollView } from "react-native-gesture-handler";
 import { observer } from "mobx-react-lite";
 import RenderHtml from "react-native-render-html";
 import { quizService } from "../../shared/store/quizStore";
+import { useTypedNavigation } from "../../shared/hooks";
+import { HomeIcon } from "../../shared/icons";
+import { GradientButton, GradientText, Layout } from "../../shared/ui";
+import { Header } from "../../components";
 
-const Results = observer(({ navigation }) => {
-  const { getResults, resultText } = quizService;
+const Results = observer(() => {
+  const { resultText } = quizService;
 
   const { width } = useWindowDimensions();
 
@@ -27,13 +31,47 @@ const Results = observer(({ navigation }) => {
     },
   };
 
+  const navigation = useTypedNavigation();
+
   return (
     <Layout>
       <ScrollView
-        stickyHeaderIndices={[1]}
-        contentContainerStyle={styles.mainConteiner}
+        stickyHeaderIndices={[2]}
+        contentContainerStyle={styles.mainContainer}
+        style={{ width: "100%" }}
+        showsVerticalScrollIndicator={false}
       >
-        <Image source={require("../../../assets/img/banner.png")} />
+        <Header
+          loading={false}
+          isSelected={{
+            state: false,
+            selectedIndex: 0,
+          }}
+        />
+        <View style={[styles.banner]}>
+          <Image
+            resizeMode="cover"
+            style={{
+              flex: 1,
+              height: undefined,
+              width: undefined,
+              maxWidth: 82,
+              maxHeight: 90,
+            }}
+            source={require("../../../assets/img/bannerIcon.png")}
+          />
+          <Image
+            resizeMode="cover"
+            style={{
+              flex: 1,
+              height: undefined,
+              width: undefined,
+              maxHeight: 90,
+              borderRadius: 8,
+            }}
+            source={require("../../../assets/img/newBanner.png")}
+          />
+        </View>
         <View style={styles.gradientContainer}>
           <GradientText
             colors={["rgba(145, 146, 252, 1)", "rgba(92, 92, 222, 1)"]}
@@ -42,21 +80,21 @@ const Results = observer(({ navigation }) => {
             Результаты
           </GradientText>
         </View>
-        <View style={styles.textContainer}>
+        <View style={[styles.textContainer, { minWidth: "100%" }]}>
           <RenderHtml
             source={source}
             tagsStyles={tagStyles}
             contentWidth={width}
           />
-          <GrButton
-            label={"На главный экран"}
-            onPress={() => {
-              getResults();
-              navigation.navigate("QiuzScreen");
-            }}
-            disabled={false}
-            colors={["rgba(145, 146, 252, 1)", "rgba(92, 92, 222, 1)"]}
-          />
+          <View>
+            <HomeIcon style={styles.icon} />
+            <GradientButton
+              label={`На главный экран`}
+              onPress={() => navigation.navigate("QuizScreen")}
+              disabled={false}
+              colors={["#5C5CDE", "#9192FC"]}
+            />
+          </View>
         </View>
       </ScrollView>
     </Layout>
@@ -66,7 +104,7 @@ const Results = observer(({ navigation }) => {
 export default Results;
 
 const styles = StyleSheet.create({
-  mainConteiner: {
+  mainContainer: {
     gap: 10,
   },
   gradientContainer: {
@@ -83,5 +121,22 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     gap: 18,
+    width: "100%",
+  },
+  icon: {
+    top: "50%",
+    zIndex: 111,
+    left: "18%",
+  },
+  banner: {
+    marginTop: -10,
+    display: "flex",
+    alignSelf: "center",
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+    flex: 1,
+    justifyContent: "center",
+    height: 90,
   },
 });

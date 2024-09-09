@@ -1,8 +1,8 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+import { TouchableOpacity, StyleSheet, ViewStyle } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-
 import { observer } from "mobx-react-lite";
+import GradientText from "../GradientText/GradientText";
 
 interface ButtonProps {
   code?: string;
@@ -13,10 +13,19 @@ interface ButtonProps {
   colors: string[];
   location?: number[];
   style?: ViewStyle;
+  labelColor?: string[];
 }
 
-const GrButton: React.FC<ButtonProps> = observer(
-  ({ label, onPress, disabled, colors, location, style }) => {
+const GradientButton: React.FC<ButtonProps> = observer(
+  ({
+    label,
+    onPress,
+    disabled = false,
+    colors,
+    location,
+    style,
+    labelColor,
+  }) => {
     return (
       <TouchableOpacity
         disabled={disabled}
@@ -28,14 +37,19 @@ const GrButton: React.FC<ButtonProps> = observer(
           style={styles.styleButton}
           locations={location}
         >
-          <Text style={styles.styleText}>{label}</Text>
+          <GradientText
+            style={[styles.styleText]}
+            colors={labelColor ? labelColor : ["#fff", "#fff"]}
+          >
+            {label}
+          </GradientText>
         </LinearGradient>
       </TouchableOpacity>
     );
   }
 );
 
-export default GrButton;
+export default GradientButton;
 
 const styles = StyleSheet.create({
   styleButton: {

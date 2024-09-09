@@ -1,17 +1,18 @@
 import React, { useEffect } from "react";
-import { GradientText, GrButton, Layout } from "../../components";
+import { Header } from "../../components";
 import { observer } from "mobx-react-lite";
-import { Image, StyleSheet, View } from "react-native";
+import { Dimensions, Image, StyleSheet, View } from "react-native";
 import { authService } from "../../shared/store/authStore";
 import LinearGradient from "react-native-linear-gradient";
-import Loader from "../LoadScreen/Loader";
 import RenderHtml from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
 import { quizService } from "../../shared/store/quizStore";
+import { useTypedNavigation } from "../../shared/hooks";
+import { GradientButton, GradientText, Layout, Loader } from "../../shared/ui";
 
-const QuizScreen: React.FC = observer(({ navigation }) => {
-  const { isLoading, logout } = authService;
-  const { startTest, quizRequest, testRequest } = quizService;
+const QuizScreen: React.FC = observer(() => {
+  const { isLoading, startTest, testRequest } = authService;
+  const { quizRequest, getResults } = quizService;
 
   const { width } = useWindowDimensions();
 
@@ -33,13 +34,45 @@ const QuizScreen: React.FC = observer(({ navigation }) => {
     },
   };
 
+  const navigation = useTypedNavigation();
+
   return (
     <Layout>
       {isLoading ? (
         <Loader />
       ) : (
         <View style={[styles.mainContainer, styles.shadowContainer]}>
-          <Image source={require("../../../assets/img/banner.png")} />
+          <Header
+            loading={false}
+            isSelected={{
+              state: false,
+              selectedIndex: 0,
+            }}
+          />
+          <View style={[styles.banner]}>
+            <Image
+              resizeMode="cover"
+              style={{
+                flex: 1,
+                height: undefined,
+                width: undefined,
+                maxWidth: 82,
+                maxHeight: 90,
+              }}
+              source={require("../../../assets/img/bannerIcon.png")}
+            />
+            <Image
+              resizeMode="cover"
+              style={{
+                flex: 1,
+                height: undefined,
+                width: undefined,
+                maxHeight: 90,
+                borderRadius: 8,
+              }}
+              source={require("../../../assets/img/newBanner.png")}
+            />
+          </View>
           <LinearGradient
             style={styles.container}
             colors={["#F8FBFF", "#FBFCFF"]}
@@ -61,27 +94,27 @@ const QuizScreen: React.FC = observer(({ navigation }) => {
                 tagsStyles={tagsStyles}
               />
             )}
-            <GrButton
-              label={
-                startTest.test_finished ? "Смотреть результаты" : "Начать тест"
-              }
-              onPress={async () =>
-                !startTest.test_finished
-                  ? await quizRequest(1).finally(() => {
-                      navigation.navigate("Questions");
-                    })
-                  : navigation.navigate("Results")
-              }
-              disabled={false}
-              colors={["#9192FC", "#5C5CDE"]}
-            />
+            <View>
+              <GradientButton
+                label={
+                  startTest.test_finished
+                    ? "Смотреть результаты"
+                    : "Начать тест"
+                }
+                onPress={async () =>
+                  !startTest.test_finished
+                    ? await quizRequest(1).finally(() => {
+                        navigation.navigate("Questions");
+                      })
+                    : await getResults().finally(() =>
+                        navigation.navigate("Results")
+                      )
+                }
+                disabled={false}
+                colors={["#9192FC", "#5C5CDE"]}
+              />
+            </View>
           </LinearGradient>
-          <GrButton
-            label={"Выход"}
-            onPress={() => logout()}
-            disabled={false}
-            colors={["white", "blue", "red"]}
-          />
         </View>
       )}
     </Layout>
@@ -93,15 +126,26 @@ export default QuizScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     display: "flex",
-    alignSelf: "center",
-    height: "100%",
+    alignItems: "center",
+    width: "100%",
     flex: 1,
   },
+  banner: {
+    display: "flex",
+    alignSelf: "center",
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+    flex: 1,
+    justifyContent: "center",
+    maxHeight: 90,
+    marginBottom: 10,
+  },
   container: {
-    marginTop: 10,
     padding: 15,
     borderRadius: 10,
     gap: 20,
+    width: "100%",
   },
   shadowContainer: {
     shadowColor: "#D8E4FA",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -6,14 +6,23 @@ import {
   Keyboard,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { GradientText, GrButton, Input, Layout } from "../../components";
+import { Input } from "../../components";
 import { emailRegex } from "../../shared/constants";
 import { observer } from "mobx-react-lite";
 import { authService } from "../../shared/store/authStore";
+import { useTypedNavigation } from "../../shared/hooks";
+import { GradientButton, GradientText, Layout } from "../../shared/ui";
+import SplashScreen from "react-native-splash-screen";
 
-const MailScreen: React.FC = observer(({ navigation }) => {
+const MailScreen: React.FC = observer(() => {
   const [email, setEmail] = useState("");
   const { passwordRequest } = authService;
+
+  const navigation = useTypedNavigation();
+
+  useEffect(() => {
+    SplashScreen.hide();
+  }, []);
 
   return (
     <Layout>
@@ -40,7 +49,7 @@ const MailScreen: React.FC = observer(({ navigation }) => {
             >
               <Input setEmail={setEmail} email={email} label="Почта" />
             </LinearGradient>
-            <GrButton
+            <GradientButton
               colors={
                 emailRegex.test(email!)
                   ? ["#9192FC", "#5C5CDE"]
@@ -50,9 +59,9 @@ const MailScreen: React.FC = observer(({ navigation }) => {
               label="Продолжить"
               email={email}
               onPress={async () => {
-                await passwordRequest(email).finally(() => {
-                  navigation.navigate("CodeScreen");
-                });
+                await passwordRequest(email).finally(() =>
+                  navigation.navigate("CodeScreen")
+                );
               }}
             />
           </View>
@@ -86,8 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 2,
     height: 74,
-    width: 354,
-    zIndex: 1,
+    width: "100%",
   },
   shadowContainer: {
     shadowColor: "#D8E4FA",

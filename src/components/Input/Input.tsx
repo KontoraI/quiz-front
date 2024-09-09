@@ -14,8 +14,8 @@ const Input: React.FC<InputProps> = ({ ...props }) => {
 
   const handleFocus = () => {
     Animated.timing(transY.current, {
-      toValue: -20,
-      duration: 100,
+      toValue: -15,
+      duration: 50,
       useNativeDriver: true,
     }).start();
   };
@@ -23,7 +23,7 @@ const Input: React.FC<InputProps> = ({ ...props }) => {
   const handleBlur = () => {
     Animated.timing(transY.current, {
       toValue: 0,
-      duration: 100,
+      duration: 50,
       useNativeDriver: true,
     }).start();
   };
@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FBFF",
     borderRadius: 13,
     height: 70,
-    width: 350,
     justifyContent: "center",
   },
   styleInput: {
